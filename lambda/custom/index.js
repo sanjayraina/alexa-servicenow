@@ -9,8 +9,8 @@ const LaunchRequestHandler = {
     return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
   },
   handle(handlerInput) {
-    const speechText = 'Welcome to the ServiceNow app, how can I help?';
-    console.log("LaunchRequest: request = ", handlerInput.requestEnvelope);
+    const speechText = 'Welcome to the ServiceNow skill, how can I help?';
+
     accessToken = handlerInput.requestEnvelope.session.user.accessToken;
     
     return handlerInput.responseBuilder
@@ -28,10 +28,8 @@ const ServiceNowIntentHandler = {
   async handle(handlerInput) {
     
     if (accessToken) {
-      console.log("Found accessToken, sending request to ServiceNow");
 
       const filledSlots = handlerInput.requestEnvelope.request.intent.slots;
-      console.log ("filledSlots = " + JSON.stringify(filledSlots));
       const ticketType = filledSlots.Tickets.value;
       let snowTable = '';
       if (ticketType.indexOf('incident') == 0) {
@@ -49,10 +47,8 @@ const ServiceNowIntentHandler = {
       else if (ticketType.indexOf('approval') == 0) {
         snowTable = 'sysapproval_approver';
       }
-      console.log(`snowTable = ${snowTable}`);
 
-      const records = await getRecords(snowTable);
-      console.log ("Retrieved " + records.result.length + " records");
+      const records = await getRecords(snowTable);       // Get the records
 
       let speechText =  "Here are the 5 most recent " + ticketType + ": ";
       for (let i = 0; i < 5; i++) {
@@ -61,7 +57,6 @@ const ServiceNowIntentHandler = {
           speechText += "Record " + (i+1) + '<break time=".5s"/>' + records.result[i].short_description + ". ";
         }
       speechText += '<break time=".5s"/>' + "End of " + ticketType + ".";
-      console.log("ServiceNowIntentHandler: tickets = " + speechText);
 
       return handlerInput.responseBuilder
           .speak(speechText)
@@ -73,13 +68,11 @@ const ServiceNowIntentHandler = {
 };
 
 function getRecords(recType) {
-  var hdrAuth = "Bearer " + accessToken;
-
-  console.log("getRecords: recType = " + recType);
+  const hdrAuth = "Bearer " + accessToken;
 
   return new Promise(((resolve, reject) => {
     const snowInstance = constants.servicenow.instance;
-    console.log ("getRecords: snowInstance = " + snowInstance);
+
     const options = {
       hostname: snowInstance,
       port: 443,
@@ -154,7 +147,6 @@ const SessionEndedRequestHandler = {
     return handlerInput.requestEnvelope.request.type === 'SessionEndedRequest';
   },
   handle(handlerInput) {
-    console.log(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`);
 
     return handlerInput.responseBuilder.getResponse();
   },
