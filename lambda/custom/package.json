@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "alexa-sdk": "^1.0.25",
-    "request": "^2.88.0"
+    "ask-sdk": "^2.3.0",
+    "https": "^1.0.0"
   }
 }

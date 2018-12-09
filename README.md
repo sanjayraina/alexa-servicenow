@@ -4,32 +4,36 @@ This Alexa Skill queries a ServiceNow instance for most recent tickets and plays
 
 ## You will need...
 
-1. NodeJS and ```npm``` installed.  
+- NodeJS and ```npm``` installed.  
 
-2. An AWS account. CAUTION: You will incur charges, unless you are using the free-tier.
+- An AWS account. CAUTION: You will incur charges, unless you are using the free-tier.
 
-3. IAM user with appropriate roles.
+- IAM user with appropriate roles.
 
-4. An Amazon developer account
+- An Amazon developer account
 
-5. A ServiceNow developer account and instance.
+- A ServiceNow developer account and instance.
 
-6. The AWS CLI
+- AWS CLI
 
-7. The ASK CLI
+- ASK CLI
 
 
 ## How to deploy
 
 Download the skill dependencies:
 ```bash
-$ (cd lambda && npm install)
+$ cd lambda/custom; npm install
 ```
 
 Deploy the skill and lambda function with ASK CLI:
 ```bash
 $ ask deploy
 ```
+
+Create OAuth API Endpoint in ServiceNow.
+- Name: Alexa ServiceNow
+- Redirect URL: https://layla.amazon.com/api/skill/link/M26D1D2CM95YM6
 
 Link the skill with ServiceNow
 
@@ -39,8 +43,11 @@ Link the skill with ServiceNow
 ## Take it for a spin
 
 You:  "Alexa, open ServiceNow"
+
 Alexa: "Welcome to the ServiceNow skill. How can I help?"
+
 You: "Tell me the recent incidents"
+
 Alexa: "Here are the 5 most recent incidents..."
 
 ## Tidy up

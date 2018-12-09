@@ -1,21 +1,21 @@
 const Alexa = require('ask-sdk-core');
-const request = require('request');
+const https = require('https');
 const constants = require('./constants');
 
-var access_token = "";
+var accessToken = "";
 
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
   },
   handle(handlerInput) {
-    const speech_text = 'Welcome to the ServiceNow app, how can I help?';
+    const speechText = 'Welcome to the ServiceNow app, how can I help?';
     console.log("LaunchRequest: request = ", handlerInput.requestEnvelope);
-    access_token = handlerInput.requestEnvelope.session.user.accessToken;
+    accessToken = handlerInput.requestEnvelope.session.user.accessToken;
     
     return handlerInput.responseBuilder
-      .speak(speech_text)
-      .reprompt(speech_text)
+      .speak(speechText)
+      .reprompt(speechText)
       .getResponse();
   },
 };
@@ -25,40 +25,97 @@ const ServiceNowIntentHandler = {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
       && handlerInput.requestEnvelope.request.intent.name === 'ServiceNowIntent';
   },
-  handle(handlerInput) {
+  async handle(handlerInput) {
     
-    if (access_token) {
-      console.log("Found access_token, sending request to ServiceNow");
+    if (accessToken) {
+      console.log("Found accessToken, sending request to ServiceNow");
 
-      // const filledSlots = handlerInput.requestEnvelope.request.intent.slots;
+      const filledSlots = handlerInput.requestEnvelope.request.intent.slots;
+      console.log ("filledSlots = " + JSON.stringify(filledSlots));
+      const ticketType = filledSlots.Tickets.value;
+      let snowTable = '';
+      if (ticketType.indexOf('incident') == 0) {
+        snowTable = 'incident';
+      }
+      else if (ticketType.indexOf('change') == 0) {
+        snowTable = 'change_request';
+      }
+      else if (ticketType.indexOf('request') == 0) {
+        snowTable = 'sc_req_item';
+      }
+      else if (ticketType.indexOf('problem') == 0) {
+        snowTable = 'problem';
+      }
+      else if (ticketType.indexOf('approval') == 0) {
+        snowTable = 'sysapproval_approver';
+      }
+      console.log(`snowTable = ${snowTable}`);
 
-      // const filled_slots = handlerInput.requestEnvelope.request.intent.slots;
-      // const ticket_type = filled_slots.Ticket.value;
-      const snow_ep = constants.snow_url + 'incident';
+      const records = await getRecords(snowTable);
+      console.log ("Retrieved " + records.result.length + " records");
 
-      request({
-        url: snow_ep,
-        auth: {'bearer': access_token}
-      }, function(err, res) {
-        var records = JSON.parse(res.body);
-        var speech_text = 'Here are your top 5 records. ';
-        for (var i = 0; i < 5; i++) {
+      let speechText =  "Here are the 5 most recent " + ticketType + ": ";
+      for (let i = 0; i < 5; i++) {
           var rec_number = i + 1;
-          
-          speech_text += "Record " + rec_number + " " + records.result[i].short_description + ". ";
-        }
-        console.log("speech_text: ", speech_text);
 
-        return handlerInput.responseBuilder
-          .speak(speech_text)
-          .withSimpleCard('Hello World', speech_text)
+          speechText += "Record " + (i+1) + '<break time=".5s"/>' + records.result[i].short_description + ". ";
+        }
+      speechText += '<break time=".5s"/>' + "End of " + ticketType + ".";
+      console.log("ServiceNowIntentHandler: tickets = " + speechText);
+
+      return handlerInput.responseBuilder
+          .speak(speechText)
+          .withSimpleCard('Hello World', speechText)
           .getResponse();
         
-      });
-    
     }
   }
 };
+
+function getRecords(recType) {
+  var hdrAuth = "Bearer " + accessToken;
+
+  console.log("getRecords: recType = " + recType);
+
+  return new Promise(((resolve, reject) => {
+    const snowInstance = constants.servicenow.instance;
+    console.log ("getRecords: snowInstance = " + snowInstance);
+    const options = {
+      hostname: snowInstance,
+      port: 443,
+      path: '/api/now/table/' + recType + '?sysparm_query=ORDERBYDESCsys_updated_on&sysparm_limit=5',
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: hdrAuth
+      }
+    };
+
+    const request = https.request(options, (response) => {
+      response.setEncoding('utf8');
+      let returnData = '';
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return reject(new Error(`${response.statusCode}: ${response.req.getHeader('host')} ${response.req.path}`));
+      }
+
+      response.on('data', (chunk) => {
+
+        returnData += chunk;
+      });
+
+      response.on('end', () => {
+        resolve(JSON.parse(returnData));
+      });
+
+      response.on('error', (error) => {
+        reject(error);
+      });
+    });
+    request.end();
+  }));
+}
+
 
 const HelpIntentHandler = {
   canHandle(handlerInput) {
@@ -66,12 +123,12 @@ const HelpIntentHandler = {
       && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent';
   },
   handle(handlerInput) {
-    const speech_text = 'You can say hello to me!';
+    const speechText = 'You can say hello to me!';
 
     return handlerInput.responseBuilder
-      .speak(speech_text)
-      .reprompt(speech_text)
-      .withSimpleCard('Hello World', speech_text)
+      .speak(speechText)
+      .reprompt(speechText)
+      .withSimpleCard('Hello World', speechText)
       .getResponse();
   },
 };
@@ -83,11 +140,11 @@ const CancelAndStopIntentHandler = {
         || handlerInput.requestEnvelope.request.intent.name === 'AMAZON.StopIntent');
   },
   handle(handlerInput) {
-    const speech_text = 'Goodbye!';
+    const speechText = 'Goodbye!';
 
     return handlerInput.responseBuilder
-      .speak(speech_text)
-      .withSimpleCard('Hello World', speech_text)
+      .speak(speechText)
+      .withSimpleCard('Hello World', speechText)
       .getResponse();
   },
 };

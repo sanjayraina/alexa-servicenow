@@ -7,7 +7,7 @@
           "examplePhrases": [
             "Alexa open servicenow"
           ],
-          "name": "servicenow",
+          "name": "alexa-servicenow",
           "description": "Sample Full Description"
         }
       },
