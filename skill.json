@@ -3,12 +3,13 @@
     "publishingInformation": {
       "locales": {
         "en-GB": {
-          "summary": "Sample Short Description",
+          "summary": "Simple ServiceNow Skill",
           "examplePhrases": [
             "Alexa open servicenow"
           ],
           "name": "alexa-servicenow",
-          "description": "Sample Full Description"
+          "description": "Connects to a ServiceNow instance and reads out 5 recent tickets",
+          "smallIconUri": "https://raw.githubusercontent.com/sanjayraina/alexa-servicenow/master/servicenowIcon.png"
         }
       },
       "isAvailableWorldwide": true,
