@@ -72,7 +72,7 @@
             }
           ],
           "samples": [
-            "Tell me recent {Tickets}"
+            "Read out the recent {Tickets}"
           ]
         }
       ]

@@ -27,8 +27,14 @@ const ServiceNowIntentHandler = {
   },
   async handle(handlerInput) {
     
-    if (accessToken) {
-
+    if (!accessToken) {
+      speechText = 'You must authenticate with your Amazon Account to use this skill. Please use your Alexa App to continue';
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .withLinkAccountCard()
+        .getResponse();
+    }
+    else {
       const filledSlots = handlerInput.requestEnvelope.request.intent.slots;
       const ticketType = filledSlots.Tickets.value;
       let snowTable = '';
